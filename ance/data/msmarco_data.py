@@ -1,18 +1,32 @@
-import sys
 import os
+import sys
+
 import torch
+
 sys.path += ['../']
-import gzip
-import pickle
-from ance.utils.util import pad_input_ids, multi_file_process, numbered_byte_file_generator, EmbeddingCache
+import argparse
 import csv
-from ance.model.models import MSMarcoConfigDict, ALL_MODELS
-from torch.utils.data import DataLoader, Dataset, TensorDataset, IterableDataset, get_worker_info
-import numpy as np
+import gzip
+import json
+import pickle
 from os import listdir
 from os.path import isfile, join
-import argparse
-import json
+
+import numpy as np
+from ance.model.models import ALL_MODELS, MSMarcoConfigDict
+from ance.utils.util import (
+    EmbeddingCache,
+    multi_file_process,
+    numbered_byte_file_generator,
+    pad_input_ids,
+)
+from torch.utils.data import (
+    DataLoader,
+    Dataset,
+    IterableDataset,
+    TensorDataset,
+    get_worker_info,
+)
 
 
 def write_query_rel(args, pid2offset, query_file, positive_id_file, out_query_file, out_id_file):
@@ -247,6 +261,7 @@ def PassagePreprocessingFn(args, line, tokenizer):
         full_text,
         add_special_tokens=True,
         max_length=args.max_seq_length,
+        truncation=True
     )
     passage_len = min(len(passage), args.max_seq_length)
     input_id_b = pad_input_ids(passage, args.max_seq_length)
@@ -261,7 +276,9 @@ def QueryPreprocessingFn(args, line, tokenizer):
     passage = tokenizer.encode(
         line_arr[1].rstrip(),
         add_special_tokens=True,
-        max_length=args.max_query_length)
+        max_length=args.max_query_length,
+        truncation=True
+    )
     passage_len = min(len(passage), args.max_query_length)
     input_id_b = pad_input_ids(passage, args.max_query_length)
 

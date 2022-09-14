@@ -1,17 +1,23 @@
-from os.path import join
 import sys
+from os.path import join
+
 sys.path += ['../']
 import argparse
+import csv
 import json
 import os
+import pickle
 import random
+
 import numpy as np
 import torch
+from ance.model.models import ALL_MODELS, MSMarcoConfigDict
+from ance.utils.util import (
+    EmbeddingCache,
+    multi_file_process,
+    numbered_byte_file_generator,
+)
 from torch.utils.data import Dataset, TensorDataset
-from ance.model.models import MSMarcoConfigDict, ALL_MODELS
-import csv
-from ance.utils.util import multi_file_process, numbered_byte_file_generator, EmbeddingCache
-import pickle
 
 
 def normalize_question(question: str) -> str:
@@ -237,7 +243,8 @@ def PassagePreprocessingFn(args, line, tokenizer):
 
     token_ids = tokenizer.encode(title, text_pair=text, add_special_tokens=True,
                                       max_length=args.max_seq_length,
-                                      pad_to_max_length=False)
+                                      pad_to_max_length=False,
+                                      truncation=True)
 
     seq_len = args.max_seq_length
     passage_len = len(token_ids)
@@ -256,7 +263,8 @@ def PassagePreprocessingFn(args, line, tokenizer):
 
 def QueryPreprocessingFn(args, qid, text, tokenizer):
     token_ids = tokenizer.encode(text, add_special_tokens=True, max_length=args.max_seq_length,
-                                       pad_to_max_length=False)
+                                       pad_to_max_length=False,
+                                       truncation=True)
 
     seq_len = args.max_seq_length
     passage_len = len(token_ids)
